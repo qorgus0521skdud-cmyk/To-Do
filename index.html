@@ -8,45 +8,18 @@
         @font-face { font-family: 'DungGeunMo'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff'); }
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
         body { padding: 10px; background: transparent; font-family: 'DungGeunMo', monospace; color: #5d4037; box-sizing: border-box; }
-        
-        /* 핑크 배경 + 갈색 테두리 복구 */
-        .dashboard { 
-            display: flex; flex-direction: column; height: 100%; 
-            background: #fff0f3; border: 3px solid #795548; border-radius: 15px; 
-            padding: 15px; box-shadow: 4px 4px 0px #ffcad4; box-sizing: border-box; 
-        }
-        
+        .dashboard { display: flex; flex-direction: column; height: 100%; background: #fff0f3; border: 3px solid #795548; border-radius: 15px; padding: 15px; box-shadow: 4px 4px 0px #ffcad4; box-sizing: border-box; }
         h2 { font-size: 1rem; margin: 0 0 8px 0; color: #795548; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #ffcad4; padding-bottom: 8px; }
-
-        /* 진행바 디자인 */
-        .progress-container {
-            width: 100%; height: 10px; background: #fff;
-            border-radius: 10px; border: 1px solid #ffcad4;
-            margin-bottom: 12px; overflow: hidden;
-        }
-        .progress-bar {
-            height: 100%; background: #f06292; width: 0%;
-            transition: width 0.4s ease-out;
-        }
-        
+        .progress-container { width: 100%; height: 10px; background: #fff; border-radius: 10px; border: 1px solid #ffcad4; margin-bottom: 12px; overflow: hidden; }
+        .progress-bar { height: 100%; background: #f06292; width: 0%; transition: width 0.4s ease-out; }
         .input-group { display: flex; gap: 6px; margin-bottom: 10px; }
-        input[type="text"] { 
-            flex: 1; padding: 8px; border: 2px solid #ffcad4; border-radius: 5px; 
-            outline: none; font-family: 'DungGeunMo'; font-size: 0.85rem; color: #5d4037;
-        }
-        .add-btn { 
-            background: #ffcad4; border: 2px solid #795548; color: #795548; 
-            padding: 0 12px; cursor: pointer; font-family: 'DungGeunMo'; font-weight: bold; border-radius: 5px;
-        }
-
+        input[type="text"] { flex: 1; padding: 8px; border: 2px solid #ffcad4; border-radius: 5px; outline: none; font-family: 'DungGeunMo'; font-size: 0.85rem; color: #5d4037; }
+        .add-btn { background: #ffcad4; border: 2px solid #795548; color: #795548; padding: 0 12px; cursor: pointer; font-family: 'DungGeunMo'; font-weight: bold; border-radius: 5px; }
         .todo-list { list-style: none; padding: 0; margin: 0; flex: 1; overflow-y: auto; }
         .todo-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ffcad4; }
         .check-icon { color: #f06292; font-size: 1.2rem; cursor: pointer; margin-right: 8px; }
         .todo-text { flex: 1; font-size: 0.9rem; }
-        
         .status { font-size: 0.65rem; color: #f06292; text-align: right; margin-top: 5px; height: 12px; }
-
-        /* 스크롤바 디자인 */
         .todo-list::-webkit-scrollbar { width: 5px; }
         .todo-list::-webkit-scrollbar-thumb { background: #ffcad4; border-radius: 10px; }
     </style>
@@ -57,33 +30,27 @@
         <span>🎀 To-Do</span>
         <span id="percent-text" style="font-size: 0.75rem; color: #f06292;">0%</span>
     </h2>
-    
-    <div class="progress-container">
-        <div id="progress-bar" class="progress-bar"></div>
-    </div>
-
+    <div class="progress-container"><div id="progress-bar" class="progress-bar"></div></div>
     <div class="input-group">
         <input type="text" id="todo-input" placeholder="할 일을 적어줘!" onkeypress="if(event.keyCode==13) addTodo()">
         <button class="add-btn" onclick="addTodo()">추가</button>
     </div>
-    
     <ul id="todo-list" class="todo-list"></ul>
     <div id="status-msg" class="status"></div>
 </div>
 
 <script>
     const CONFIG = {
-        NOTION_TOKEN: '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',
-        DATABASE_ID: '2f7dd77690a780889d4fe79d9f831108'
+        NOTION_TOKEN: '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',
+        DATABASE_ID: '01b7874b2896419980f40b6d68e025ef'
     };
 
-    let todos = JSON.parse(localStorage.getItem('notion-todo-v4')) || [];
+    let todos = JSON.parse(localStorage.getItem('notion-todo-final-v2')) || [];
 
     function updateProgress() {
         const total = todos.length;
         const done = todos.filter(t => t.done).length;
         const percent = total === 0 ? 0 : Math.round((done / total) * 100);
-        
         document.getElementById('progress-bar').style.width = percent + "%";
         document.getElementById('percent-text').innerText = percent + "%";
     }
@@ -99,8 +66,7 @@
                 <span onclick="deleteTodo(${i})" style="font-size:0.65rem; color:#bcaaa4; cursor:pointer; margin-left:8px;">삭제</span>
             </li>
         `).join('');
-        
-        localStorage.setItem('notion-todo-v4', JSON.stringify(todos));
+        localStorage.setItem('notion-todo-final-v2', JSON.stringify(todos));
         updateProgress();
     }
 
@@ -117,7 +83,8 @@
         msg.innerText = "노션 전송 중... ✨";
 
         try {
-            const res = await fetch('api/record', {
+            // Vercel 서버리스 함수 경로 호출
+            const res = await fetch('/api/record', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -128,7 +95,11 @@
                 })
             });
             if (res.ok) msg.innerText = "노션 저장 완료! ♥";
-            else msg.innerText = "저장 실패 (연결 확인)";
+            else {
+                const errData = await res.json();
+                msg.innerText = "저장 실패 (권한/ID 확인)";
+                console.error("Notion Error:", errData);
+            }
         } catch (e) {
             msg.innerText = "네트워크 에러";
         }
@@ -148,5 +119,4 @@
     window.onload = render;
 </script>
 </body>
-
 </html>
