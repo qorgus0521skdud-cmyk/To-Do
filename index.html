@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notion To-Do Widget</title>
+    <title>Notion Sync To-Do</title>
     <style>
         @font-face { font-family: 'DungGeunMo'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff'); }
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
@@ -38,7 +38,9 @@
 
 <script>
     const CONFIG = {
-        NOTION_TOKEN: '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',
+        // 사진(image_43ce7f.png)에서 확인된 최신 시크릿
+        NOTION_TOKEN: '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',
+        // 주소창에서 확인된 정확한 DB ID
         DATABASE_ID: '2f7dd77690a780889d4fe79d9f831108'
     };
 
@@ -90,16 +92,17 @@
                     notionToken: CONFIG.NOTION_TOKEN
                 })
             });
-            if (res.ok) msg.innerText = "노션 저장 완료! ♥";
-            else {
+            if (res.ok) {
+                msg.innerText = "노션 저장 완료! ♥";
+            } else {
                 const errData = await res.json();
                 console.error("Notion Error:", errData);
-                msg.innerText = "저장 실패 (ID/연결 확인)";
+                msg.innerText = "저장 실패 (연결/권한 확인)";
             }
         } catch (e) {
             msg.innerText = "네트워크 에러";
         }
-        setTimeout(() => { if(msg.innerText.includes("완료")) msg.innerText = ""; }, 3000);
+        setTimeout(() => { if(msg.innerText.includes("완료")) msg.innerText = ""; }, 2500);
     }
 
     function toggleTodo(i) { todos[i].done = !todos[i].done; render(); }
