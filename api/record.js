@@ -1,25 +1,13 @@
 export default async function handler(req, res) {
-  // 1. POST 요청이 아니면 거절합니다.
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
 
   const { title, completed } = req.body;
-
-  // 2. Vercel Settings -> Environment Variables에 등록한 값을 가져옵니다.
   const notionToken = process.env.NOTION_TOKEN;
   const databaseId = process.env.DATABASE_ID;
 
-  // 3. 만약 환경 변수가 제대로 설정되지 않았다면 에러를 보냅니다.
-  if (!notionToken || !databaseId) {
-    return res.status(500).json({ 
-      error: "환경 변수가 설정되지 않았습니다. Vercel 설정을 확인해주세요." 
-    });
-  }
-
   try {
-    // 4. 노션 API 호출
-    const response = await fetch('https://api.notion.com/v1/pages', {
+    // 1. 먼저 노션 DB에서 해당 제목을 가진 페이지가 있는지 찾습니다.
+    const searchRes = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${notionToken}`,
@@ -27,31 +15,47 @@ export default async function handler(req, res) {
         'Notion-Version': '2022-06-28'
       },
       body: JSON.stringify({
-        parent: { database_id: databaseId },
-        properties: {
-          '이름': { 
-            title: [{ text: { content: title } }] 
-          },
-          '완료': { 
-            checkbox: completed || false 
-          }
-        }
+        filter: { property: '이름', title: { equals: title } }
       })
     });
 
-    const data = await response.json();
+    const searchData = await searchRes.json();
 
-    if (response.ok) {
-      // 저장 성공!
-      return res.status(200).json(data);
+    if (searchData.results.length > 0) {
+      // 2. 이미 있다면? 완료 상태만 업데이트합니다. (PATCH)
+      const pageId = searchData.results[0].id;
+      const updateRes = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${notionToken}`,
+          'Content-Type': 'application/json',
+          'Notion-Version': '2022-06-28'
+        },
+        body: JSON.stringify({
+          properties: { '완료': { checkbox: completed } }
+        })
+      });
+      return res.status(200).json({ status: 'updated' });
     } else {
-      // 노션에서 에러를 보냈을 때 (토큰 무효, 권한 부족 등)
-      console.error("Notion API Error:", data);
-      return res.status(response.status).json(data);
+      // 3. 없다면? 새로 만듭니다. (POST)
+      const createRes = await fetch('https://api.notion.com/v1/pages', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${notionToken}`,
+          'Content-Type': 'application/json',
+          'Notion-Version': '2022-06-28'
+        },
+        body: JSON.stringify({
+          parent: { database_id: databaseId },
+          properties: {
+            '이름': { title: [{ text: { content: title } }] },
+            '완료': { checkbox: completed }
+          }
+        })
+      });
+      return res.status(200).json({ status: 'created' });
     }
   } catch (error) {
-    // 네트워크 에러 등 예외 발생
-    console.error("Server Error:", error);
     return res.status(500).json({ error: error.message });
   }
 }
