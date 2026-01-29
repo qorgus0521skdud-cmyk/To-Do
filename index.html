@@ -14,14 +14,12 @@
         .progress-bar { height: 100%; background: #f06292; width: 0%; transition: width 0.4s ease-out; }
         .input-group { display: flex; gap: 6px; margin-bottom: 10px; }
         input[type="text"] { flex: 1; padding: 8px; border: 2px solid #ffcad4; border-radius: 5px; outline: none; font-family: 'DungGeunMo'; font-size: 0.85rem; color: #5d4037; }
-        .add-btn { background: #ffcad4; border: 2px solid #795548; color: #795548; padding: 0 12px; cursor: pointer; font-family: 'DungGeunMo'; font-weight: bold; border-radius: 5px; }
+        .add-btn { background: #ffcad4; border: 2px solid #795548; color: #795548; padding: 0 12px; cursor: pointer; font-family: 'DungGeunMo'; font-weight: bold; border-radius: 5px; min-width: 50px; }
         .todo-list { list-style: none; padding: 0; margin: 0; flex: 1; overflow-y: auto; }
         .todo-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ffcad4; }
         .check-icon { color: #f06292; font-size: 1.2rem; cursor: pointer; margin-right: 8px; }
         .todo-text { flex: 1; font-size: 0.9rem; }
         .status { font-size: 0.65rem; color: #f06292; text-align: right; margin-top: 5px; height: 12px; }
-        .todo-list::-webkit-scrollbar { width: 5px; }
-        .todo-list::-webkit-scrollbar-thumb { background: #ffcad4; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -29,16 +27,19 @@
     <h2><span>🎀 To-Do</span><span id="percent-text" style="font-size: 0.75rem; color: #f06292;">0%</span></h2>
     <div class="progress-container"><div id="progress-bar" class="progress-bar"></div></div>
     <div class="input-group">
-        <input type="text" id="todo-input" placeholder="할 일을 적어줘!" onkeypress="if(event.keyCode==13) addTodo()">
-        <button class="add-btn" onclick="addTodo()">추가</button>
+        <input type="text" id="todo-input" placeholder="할 일을 적어줘!" autocomplete="off">
+        <button id="add-btn" class="add-btn">추가</button>
     </div>
     <ul id="todo-list" class="todo-list"></ul>
     <div id="status-msg" class="status"></div>
 </div>
 
 <script>
-    // 이제 여기에는 민감한 토큰 정보를 적지 않습니다.
     let todos = JSON.parse(localStorage.getItem('notion-todo-vfinal-secure')) || [];
+
+    const input = document.getElementById('todo-input');
+    const btn = document.getElementById('add-btn');
+    const msg = document.getElementById('status-msg');
 
     function updateProgress() {
         const total = todos.length;
@@ -64,40 +65,37 @@
     }
 
     async function addTodo() {
-        const input = document.getElementById('todo-input');
         const text = input.value.trim();
         if(!text) return;
 
+        // 화면에 먼저 표시
         todos.push({ text, done: false });
         input.value = '';
         render();
 
-        const msg = document.getElementById('status-msg');
         msg.innerText = "노션 전송 중... ✨";
 
         try {
-            // 서버(Vercel Function)에 제목만 보냅니다.
             const res = await fetch('/api/record', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    title: text, 
-                    completed: false
-                })
+                body: JSON.stringify({ title: text, completed: false })
             });
 
             if (res.ok) {
                 msg.innerText = "노션 저장 완료! ♥";
             } else {
-                const errData = await res.json();
-                console.error("Notion Error:", errData);
-                msg.innerText = "저장 실패 (Vercel 설정 확인)";
+                msg.innerText = "전송 실패 (환경변수 확인 필요)";
             }
         } catch (e) {
-            msg.innerText = "네트워크 에러";
+            msg.innerText = "네트워크 에러 발생";
         }
-        setTimeout(() => { if(msg.innerText.includes("완료")) msg.innerText = ""; }, 3000);
+        setTimeout(() => { msg.innerText = ""; }, 3000);
     }
+
+    // 버튼 클릭 및 엔터키 이벤트 바인딩
+    btn.addEventListener('click', addTodo);
+    input.addEventListener('keypress', (e) => { if(e.key === 'Enter') addTodo(); });
 
     function toggleTodo(i) { todos[i].done = !todos[i].done; render(); }
     function deleteTodo(i) { todos.splice(i, 1); render(); }
