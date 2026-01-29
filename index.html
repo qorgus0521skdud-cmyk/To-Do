@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notion Sync To-Do</title>
+    <title>Notion To-Do Widget</title>
     <style>
         @font-face { font-family: 'DungGeunMo'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff'); }
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
@@ -38,13 +38,13 @@
 
 <script>
     const CONFIG = {
-        // 사진(image_43ce7f.png)에서 확인된 최신 시크릿
+        // 사진(image_43ce7f.png)의 시크릿을 한 글자씩 대조하여 넣었습니다.
         NOTION_TOKEN: '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',
-        // 주소창에서 확인된 정확한 DB ID
+        // 알려주신 정확한 데이터베이스 ID입니다.
         DATABASE_ID: '2f7dd77690a780889d4fe79d9f831108'
     };
 
-    let todos = JSON.parse(localStorage.getItem('notion-todo-vfinal-real')) || [];
+    let todos = JSON.parse(localStorage.getItem('notion-todo-vfinal-perfect')) || [];
 
     function updateProgress() {
         const total = todos.length;
@@ -65,7 +65,7 @@
                 <span onclick="deleteTodo(${i})" style="font-size:0.65rem; color:#bcaaa4; cursor:pointer; margin-left:8px;">삭제</span>
             </li>
         `).join('');
-        localStorage.setItem('notion-todo-vfinal-real', JSON.stringify(todos));
+        localStorage.setItem('notion-todo-vfinal-perfect', JSON.stringify(todos));
         updateProgress();
     }
 
@@ -79,7 +79,7 @@
         render();
 
         const msg = document.getElementById('status-msg');
-        msg.innerText = "노션 전송 중... ✨";
+        msg.innerText = "전송 중... ✨";
 
         try {
             const res = await fetch('/api/record', {
@@ -97,12 +97,11 @@
             } else {
                 const errData = await res.json();
                 console.error("Notion Error:", errData);
-                msg.innerText = "저장 실패 (연결/권한 확인)";
+                msg.innerText = "저장 실패 (토큰/권한 확인)";
             }
         } catch (e) {
             msg.innerText = "네트워크 에러";
         }
-        setTimeout(() => { if(msg.innerText.includes("완료")) msg.innerText = ""; }, 2500);
     }
 
     function toggleTodo(i) { todos[i].done = !todos[i].done; render(); }
