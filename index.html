@@ -42,10 +42,10 @@
 <script>
     const CONFIG = {
         NOTION_TOKEN: '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',
-        DATABASE_ID: '01b7874b2896419980f40b6d68e025ef'
+        DATABASE_ID: '2f7dd77690a780889d4fe79d9f831108'
     };
 
-    let todos = JSON.parse(localStorage.getItem('notion-todo-final-v2')) || [];
+    let todos = JSON.parse(localStorage.getItem('notion-todo-vfinal')) || [];
 
     function updateProgress() {
         const total = todos.length;
@@ -66,7 +66,7 @@
                 <span onclick="deleteTodo(${i})" style="font-size:0.65rem; color:#bcaaa4; cursor:pointer; margin-left:8px;">삭제</span>
             </li>
         `).join('');
-        localStorage.setItem('notion-todo-final-v2', JSON.stringify(todos));
+        localStorage.setItem('notion-todo-vfinal', JSON.stringify(todos));
         updateProgress();
     }
 
@@ -83,7 +83,6 @@
         msg.innerText = "노션 전송 중... ✨";
 
         try {
-            // Vercel 서버리스 함수 경로 호출
             const res = await fetch('/api/record', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -96,14 +95,14 @@
             });
             if (res.ok) msg.innerText = "노션 저장 완료! ♥";
             else {
-                const errData = await res.json();
-                msg.innerText = "저장 실패 (권한/ID 확인)";
-                console.error("Notion Error:", errData);
+                const err = await res.json();
+                console.error(err);
+                msg.innerText = "저장 실패 (ID/연결 확인)";
             }
         } catch (e) {
             msg.innerText = "네트워크 에러";
         }
-        setTimeout(() => msg.innerText = "", 2000);
+        setTimeout(() => { if(msg.innerText.includes("완료")) msg.innerText = ""; }, 2500);
     }
 
     function toggleTodo(i) {
