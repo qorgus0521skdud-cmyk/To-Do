@@ -64,4 +64,44 @@
     }
 
     async function addTodo() {
-        const input =
+        const input = document.getElementById('todo-input');
+        const text = input.value.trim();
+        if(!text) return;
+
+        todos.push({ text, done: false });
+        input.value = '';
+        render();
+
+        const msg = document.getElementById('status-msg');
+        msg.innerText = "노션 전송 중... ✨";
+
+        try {
+            // 서버(Vercel Function)에 제목만 보냅니다.
+            const res = await fetch('/api/record', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    title: text, 
+                    completed: false
+                })
+            });
+
+            if (res.ok) {
+                msg.innerText = "노션 저장 완료! ♥";
+            } else {
+                const errData = await res.json();
+                console.error("Notion Error:", errData);
+                msg.innerText = "저장 실패 (Vercel 설정 확인)";
+            }
+        } catch (e) {
+            msg.innerText = "네트워크 에러";
+        }
+        setTimeout(() => { if(msg.innerText.includes("완료")) msg.innerText = ""; }, 3000);
+    }
+
+    function toggleTodo(i) { todos[i].done = !todos[i].done; render(); }
+    function deleteTodo(i) { todos.splice(i, 1); render(); }
+    window.onload = render;
+</script>
+</body>
+</html>
